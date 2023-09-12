@@ -7,6 +7,12 @@
         android:title="@string/title_home" />
 
     <item
+        android:id="@+id/navigation_myvoice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:icon="@android:drawable/sym_action_chat"
+        android:title="@string/title_myvoice" />
+    <item
         android:id="@+id/navigation_dashboard"
         android:icon="@android:drawable/ic_dialog_info"
         android:title="@string/title_dashboard" />

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Amplifty</string>
     <string name="title_home">Amplify</string>
+    <string name="title_myvoice">My Voice</string>
     <string name="title_dashboard">Help</string>
     <string name="title_notifications">Settings</string>
 </resources>

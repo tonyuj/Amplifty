@@ -18,6 +18,10 @@
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
+        android:id="@+id/navigation_myvoice"
+        android:name="com.apps.amplifty.ui.notifications.MyVoiceFragment"
+        android:label="@string/title_myvoice" />
+    <fragment
         android:id="@+id/navigation_notifications"
         android:name="com.apps.amplifty.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
