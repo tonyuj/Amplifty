@@ -12,18 +12,18 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.apps.amplifty.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_help"
+        android:name="com.apps.amplifty.ui.help.HelpFragment"
+        android:label="@string/title_help"
+        tools:layout="@layout/fragment_help" />
 
     <fragment
         android:id="@+id/navigation_myvoice"
-        android:name="com.apps.amplifty.ui.notifications.MyVoiceFragment"
+        android:name="com.apps.amplifty.ui.settings.MyVoiceFragment"
         android:label="@string/title_myvoice" />
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.apps.amplifty.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
+        android:id="@+id/navigation_settings"
+        android:name="com.apps.amplifty.ui.settings.SettingsFragment"
+        android:label="@string/title_settings"
         tools:layout="@layout/fragment_notifications" />
 </navigation>

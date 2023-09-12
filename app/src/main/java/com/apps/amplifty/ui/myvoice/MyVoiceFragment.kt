@@ -1,4 +1,4 @@
-package com.apps.amplifty.ui.notifications
+package com.apps.amplifty.ui.settings
 
 import android.os.Bundle
 import android.view.LayoutInflater

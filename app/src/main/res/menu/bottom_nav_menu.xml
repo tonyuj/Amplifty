@@ -13,13 +13,13 @@
         android:icon="@android:drawable/sym_action_chat"
         android:title="@string/title_myvoice" />
     <item
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/navigation_help"
         android:icon="@android:drawable/ic_dialog_info"
-        android:title="@string/title_dashboard" />
+        android:title="@string/title_help" />
 
     <item
-        android:id="@+id/navigation_notifications"
+        android:id="@+id/navigation_settings"
         android:icon="@android:drawable/ic_menu_preferences"
-        android:title="@string/title_notifications" />
+        android:title="@string/title_settings" />
 
 </menu>
