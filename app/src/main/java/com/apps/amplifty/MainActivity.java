@@ -296,7 +296,6 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             running = true;
 
-            int hz = 0;
             int N = 0;
             short[] buf;
 
