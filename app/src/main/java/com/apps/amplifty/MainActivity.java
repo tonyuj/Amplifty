@@ -28,20 +28,12 @@ import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
-
-    //
-    // Configuration for speech recognition
-    //
-
-    // Replace below with your own subscription key
     private static final String SpeechSubscriptionKey = "";
     // Replace below with your own service region (e.g., "westus").
     private static final String SpeechRegion = "eastus";
     private static final String KwsModelFile = "kws.table";
 
     private TextView recognizedTextView;
-
-    private Button recognizeButton;
     private Button recognizeContinuousButton;
 
     private MicrophoneStream microphoneStream;
@@ -65,8 +57,6 @@ public class MainActivity extends AppCompatActivity {
 
         recognizedTextView = findViewById(R.id.recognizedText);
         recognizedTextView.setMovementMethod(new ScrollingMovementMethod());
-
-        recognizeButton = findViewById(R.id.buttonRecognize);
         recognizeContinuousButton = findViewById(R.id.buttonRecognizeContinuous);
 
         // Initialize SpeechSDK and request required permissions.
@@ -194,14 +184,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void disableButtons() {
         MainActivity.this.runOnUiThread(() -> {
-            recognizeButton.setEnabled(false);
             recognizeContinuousButton.setEnabled(false);
         });
     }
 
     private void enableButtons() {
         MainActivity.this.runOnUiThread(() -> {
-            recognizeButton.setEnabled(true);
             recognizeContinuousButton.setEnabled(true);
         });
     }
