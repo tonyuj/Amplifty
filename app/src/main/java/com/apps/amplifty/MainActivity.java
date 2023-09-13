@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         microphoneStream = new MicrophoneStream();
 
         // debug: also start streaming audio
-        startAudioStreaming();
+//        startAudioStreaming();
 
         return microphoneStream;
     }
@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // debug: stop audio streaming
-        if(MainActivity.this.streamer != null)
-            stopAudioStreaming();
+//        if(MainActivity.this.streamer != null)
+  //          stopAudioStreaming();
     }
 
     private void startAudioStreaming() {
@@ -143,6 +143,9 @@ public class MainActivity extends AppCompatActivity {
                             });
                             enableButtons();
                             continuousListeningStarted = false;
+
+                            // stop audio streaming
+                            stopAudioStreaming();
                         });
                     } else {
                         continuousListeningStarted = false;
@@ -152,6 +155,9 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 clearTextBox();
+
+                // start audio streaming
+                startAudioStreaming();
 
                 try {
                     content.clear();
