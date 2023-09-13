@@ -50,9 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         microphoneStream = new MicrophoneStream();
 
-        // debug: also start streaming audio
-//        startAudioStreaming();
-
         return microphoneStream;
     }
     private void releaseMicrophoneStream() {
@@ -60,10 +57,6 @@ public class MainActivity extends AppCompatActivity {
             microphoneStream.close();
             microphoneStream = null;
         }
-
-        // debug: stop audio streaming
-//        if(MainActivity.this.streamer != null)
-  //          stopAudioStreaming();
     }
 
     private void startAudioStreaming() {
