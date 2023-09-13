@@ -3,6 +3,11 @@ package com.apps.amplifty;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.AudioTrack;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
@@ -28,6 +33,9 @@ import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
+    // pipeline for audio streaming
+    AudioPipeStream streamer;
+
     private static final String SpeechSubscriptionKey = "";
     // Replace below with your own service region (e.g., "westus").
     private static final String SpeechRegion = "eastus";
@@ -41,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
         this.releaseMicrophoneStream();
 
         microphoneStream = new MicrophoneStream();
+
+        // debug: also start streaming audio
+        startAudioStreaming();
+
         return microphoneStream;
     }
     private void releaseMicrophoneStream() {
@@ -48,8 +60,29 @@ public class MainActivity extends AppCompatActivity {
             microphoneStream.close();
             microphoneStream = null;
         }
+
+        // debug: stop audio streaming
+        if(MainActivity.this.streamer != null)
+            stopAudioStreaming();
     }
 
+    private void startAudioStreaming() {
+        // create audio streamer. This will also start it
+        MainActivity.this.streamer = MainActivity.this.new AudioPipeStream();
+        Log.i("Streamer", "Audio streamer started.");
+    }
+
+    private void stopAudioStreaming() {
+        // stop audio streaming
+        MainActivity.this.streamer.stahp();
+        MainActivity.this.streamer.interrupt();
+        try {
+            MainActivity.this.streamer.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Log.i("Streamer", "Audio streamer stopped.");
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -247,6 +280,77 @@ public class MainActivity extends AppCompatActivity {
             this.accuracyScore = accuracyScore;
             this.duration = duration;
             this.offset = offset;
+        }
+    }
+
+    private class AudioPipeStream extends Thread {
+        private boolean running = false;
+
+        private final static int SAMPLE_RATE = 16000;
+
+        private AudioPipeStream() {
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+            start();
+        }
+
+        @Override
+        public void run() {
+            running = true;
+
+            int hz = 0;
+            int N = 0;
+            short[] buf;
+
+            N = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+
+            buf = new short[N];
+
+            Log.i("SNDREC", "Buffer size = " + N);
+
+            AudioRecord rec = null;
+            AudioTrack trk = null;
+
+            try {
+
+                rec = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, N);
+                trk = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, N, AudioTrack.MODE_STREAM);
+                rec.startRecording();
+                trk.play();
+
+                Log.i("SNDREC", "Start'd");
+
+                while(running)
+                {
+                    // read from microphone
+                    N = rec.read(buf,0,buf.length);
+
+                    // apply attenuation to reduce probability of howling
+                    for(int i=0;i<buf.length;i++)
+                        buf[i] = (short) (buf[i]>>4);
+
+                    // output to speaker
+                    trk.write(buf, 0, buf.length);
+                }
+                Log.i("SNDREC", "Stahp'd");
+            }
+            catch(Throwable t)
+            {
+                t.printStackTrace();
+                Log.e("SNDREC", "RETVAL #" + N);
+            }
+            finally
+            {
+                rec.stop();
+                rec.release();
+                trk.stop();
+                trk.release();
+                Log.i("SNDREC", "Disposed");
+            }
+        }
+
+        public void stahp()
+        {
+            running = false;
         }
     }
 }
