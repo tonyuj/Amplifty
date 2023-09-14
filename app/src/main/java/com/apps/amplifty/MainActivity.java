@@ -1,8 +1,17 @@
 package com.apps.amplifty;
 
+import com.apps.amplifty.R;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
+import android.annotation.SuppressLint;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -12,9 +21,18 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.apps.amplifty.databinding.ActivityMainBinding;
+import com.apps.amplifty.ui.help.HelpFragment;
+import com.apps.amplifty.ui.home.HomeFragment;
+import com.apps.amplifty.ui.settings.MyVoiceFragment;
+import com.apps.amplifty.ui.settings.SettingsFragment;
+import com.google.android.material.navigation.NavigationBarView;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
 import com.microsoft.cognitiveservices.speech.SpeechConfig;
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer;
@@ -33,10 +51,10 @@ import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
+    ActivityMainBinding binding;
     // pipeline for audio streaming
     AudioPipeStream streamer;
-
-    private static final String SpeechSubscriptionKey = "";
+    private static final String SpeechSubscriptionKey = "aefea0592c9d43358f81419551a1deac";
     // Replace below with your own service region (e.g., "westus").
     private static final String SpeechRegion = "eastus";
     private static final String KwsModelFile = "kws.table";
@@ -45,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private Button recognizeContinuousButton;
 
     private MicrophoneStream microphoneStream;
+
     private MicrophoneStream createMicrophoneStream() {
         this.releaseMicrophoneStream();
 
@@ -52,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
         return microphoneStream;
     }
+
     private void releaseMicrophoneStream() {
         if (microphoneStream != null) {
             microphoneStream.close();
@@ -76,10 +96,39 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.i("Streamer", "Audio streamer stopped.");
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        Log.d("MainActivity", "onCreate");
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        Log.i("MainActivity", String.valueOf(R.id.nav_btn_home));
+        binding.navView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+                int itemId = item.getItemId();
+                if (itemId == R.id.nav_btn_home) {
+                    replaceFragment(new HomeFragment());
+                } else if (itemId == R.id.nav_btn_my_voice) {
+                    replaceFragment(new MyVoiceFragment());
+                } else if (itemId == R.id.nav_btn_help) {
+                    replaceFragment(new HelpFragment());
+                } else if (itemId == R.id.nav_btn_settings) {
+                    replaceFragment(new SettingsFragment());
+                }
+
+                return true;
+            }
+        });
+
+//        NavHostFragment navHostFragment =
+//                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_activity_main2);
+//        NavController navController = navHostFragment.getNavController();
+
 
         recognizedTextView = findViewById(R.id.recognizedText);
         recognizedTextView.setMovementMethod(new ScrollingMovementMethod());
@@ -93,8 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Request permissions needed for speech recognition
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET, READ_EXTERNAL_STORAGE}, permissionRequestId);
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             Log.e("SpeechSDK", "could not init sdk, " + ex.toString());
             recognizedTextView.setText("Could not initialize: " + ex.toString());
         }
@@ -190,6 +238,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void replaceFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.nav_host_fragment_activity_main2, fragment);
+        fragmentTransaction.commit();
+
+    }
 
     private void displayException(Exception ex) {
         recognizedTextView.setText(ex.getMessage() + System.lineSeparator() + TextUtils.join(System.lineSeparator(), ex.getStackTrace()));
@@ -250,8 +305,7 @@ public class MainActivity extends AppCompatActivity {
                 FileOutputStream fos = new FileOutputStream(cacheFile);
                 fos.write(buffer);
                 fos.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -259,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static ExecutorService s_executorService;
+
     static {
         s_executorService = Executors.newCachedThreadPool();
     }
@@ -269,6 +324,7 @@ public class MainActivity extends AppCompatActivity {
         public double accuracyScore;
         public long duration;
         public long offset;
+
         public Word(String word, String errorType) {
             this.word = word;
             this.errorType = errorType;
@@ -317,27 +373,22 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.i("SNDREC", "Start'd");
 
-                while(running)
-                {
+                while (running) {
                     // read from microphone
-                    N = rec.read(buf,0,buf.length);
+                    N = rec.read(buf, 0, buf.length);
 
                     // apply attenuation to reduce probability of howling
-                    for(int i=0;i<buf.length;i++)
-                        buf[i] = (short) (buf[i]>>4);
+                    for (int i = 0; i < buf.length; i++)
+                        buf[i] = (short) (buf[i] >> 4);
 
                     // output to speaker
                     trk.write(buf, 0, buf.length);
                 }
                 Log.i("SNDREC", "Stahp'd");
-            }
-            catch(Throwable t)
-            {
+            } catch (Throwable t) {
                 t.printStackTrace();
                 Log.e("SNDREC", "RETVAL #" + N);
-            }
-            finally
-            {
+            } finally {
                 rec.stop();
                 rec.release();
                 trk.stop();
@@ -346,9 +397,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        public void stahp()
-        {
+        public void stahp() {
             running = false;
         }
+
     }
 }

@@ -9,7 +9,17 @@
         android:id="@+id/navigation_home"
         android:name="com.apps.amplifty.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_help"
+            app:destination="@id/navigation_help" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_my_voice"
+            app:destination="@id/navigation_my_voice" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_settings"
+            app:destination="@id/navigation_settings" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_help"
@@ -18,9 +28,9 @@
         tools:layout="@layout/fragment_help" />
 
     <fragment
-        android:id="@+id/navigation_myvoice"
+        android:id="@+id/navigation_my_voice"
         android:name="com.apps.amplifty.ui.settings.MyVoiceFragment"
-        android:label="@string/title_myvoice" />
+        android:label="@string/title_my_voice" />
     <fragment
         android:id="@+id/navigation_settings"
         android:name="com.apps.amplifty.ui.settings.SettingsFragment"

@@ -2,23 +2,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/navigation_home"
+        android:id="@+id/nav_btn_home"
         android:icon="@android:drawable/ic_btn_speak_now"
         android:title="@string/title_home" />
 
     <item
-        android:id="@+id/navigation_myvoice"
+        android:id="@+id/nav_btn_my_voice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:icon="@android:drawable/sym_action_chat"
-        android:title="@string/title_myvoice" />
+        android:title="@string/title_my_voice"
+        />
     <item
-        android:id="@+id/navigation_help"
+        android:id="@+id/nav_btn_help"
         android:icon="@android:drawable/ic_dialog_info"
         android:title="@string/title_help" />
 
     <item
-        android:id="@+id/navigation_settings"
+        android:id="@+id/nav_btn_settings"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="@string/title_settings" />
 
