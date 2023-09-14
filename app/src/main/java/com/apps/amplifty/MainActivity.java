@@ -30,7 +30,7 @@ import android.widget.Toast;
 import com.apps.amplifty.databinding.ActivityMainBinding;
 import com.apps.amplifty.ui.help.HelpFragment;
 import com.apps.amplifty.ui.home.HomeFragment;
-import com.apps.amplifty.ui.settings.MyVoiceFragment;
+import com.apps.amplifty.ui.myvoice.MyVoiceFragment;
 import com.apps.amplifty.ui.settings.SettingsFragment;
 import com.google.android.material.navigation.NavigationBarView;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;

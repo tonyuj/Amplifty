@@ -1,4 +1,4 @@
-package com.apps.amplifty.ui.settings
+package com.apps.amplifty.ui.myvoice
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
