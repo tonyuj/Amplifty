@@ -121,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
         binding.navView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
                 int itemId = item.getItemId();
                 if (itemId == R.id.nav_btn_home) {
                     replaceFragment(new HomeFragment());
@@ -367,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
     private void replaceFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-//        fragmentTransaction.replace(R.id.nav_host_fragment_activity_main2, fragment);
+        fragmentTransaction.replace(R.id.nav_host_fragment_activity_main2, fragment);
         fragmentTransaction.commit();
     }
 
