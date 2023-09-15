@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KwsModelFile = "kws.table";
 
     private TextView recognizedTextView;
+    private Button translateContinuousButton;
     private Button recognizeContinuousButton;
 
     private MicrophoneStream microphoneStream;
@@ -129,14 +130,94 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-//        NavHostFragment navHostFragment =
-//                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_activity_main2);
-//        NavController navController = navHostFragment.getNavController();
-
 
         recognizedTextView = findViewById(R.id.recognizedText);
         recognizedTextView.setMovementMethod(new ScrollingMovementMethod());
+        translateContinuousButton = findViewById(R.id.buttonRecognizeContinuous2);
+        translateContinuousButton.setOnClickListener(new View.OnClickListener() {
+            private static final String logTag = "reco";
+            private boolean continuousListeningStarted = false;
+            private SpeechRecognizer reco = null;
+            private TranslationRecognizer translatorReco = null;
+            private AudioConfig audioInput = null;
+            private String buttonText = "";
+            private ArrayList<String> content = new ArrayList<>();
+            private boolean clicked = false;
+
+            @Override
+            public void onClick(final View view) {
+                final Button clickedButton = (Button) view;
+                disableButtons();
+                if (continuousListeningStarted) {
+                    if (translatorReco != null) {
+                        final Future<Void> task = translatorReco.stopContinuousRecognitionAsync();
+                        setOnTaskCompletedListener(task, result -> {
+                            Log.i(logTag, "Continuous recognition stopped.");
+                            enableButtons();
+                            continuousListeningStarted = false;
+
+                            stopAudioStreaming();
+                        });
+                    } else {
+                        continuousListeningStarted = false;
+                    }
+
+                    return;
+                }
+
+                clearTextBox();
+
+                // start audio streaming
+                startAudioStreaming();
+
+                try {
+                    content.clear();
+
+                    audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
+
+                    SpeechTranslationConfig speechTranslationConfig = SpeechTranslationConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
+                    speechTranslationConfig.setSpeechRecognitionLanguage("en-US");
+
+                    String toLanguage = "ko";
+                    String[] toLanguages = {toLanguage};
+                    for (String language : toLanguages) {
+                        speechTranslationConfig.addTargetLanguage(language);
+                    }
+                    translatorReco = new TranslationRecognizer(speechTranslationConfig, audioInput);
+                    ;
+                    translatorReco.recognizing.addEventListener((o, speechTranslationResultEventArgs) -> {
+                        final String s = speechTranslationResultEventArgs.getResult().getTranslations().get(toLanguage);
+                        content.add(s);
+                        setRecognizedText(TextUtils.join(" ", content));
+                        content.remove(content.size() - 1);
+                    });
+
+                    translatorReco.recognized.addEventListener((o, speechTranslationResultEventArgs) -> {
+                        final String s = speechTranslationResultEventArgs.getResult().getTranslations().get(toLanguage);
+                        Log.d("MainActivity-recognized", s);
+                        content.add(s);
+                        setRecognizedText(TextUtils.join(" ", content));
+                    });
+
+                    final Future<Void> task = translatorReco.startContinuousRecognitionAsync();
+
+                    setOnTaskCompletedListener(task, result -> {
+                        continuousListeningStarted = true;
+                        MainActivity.this.runOnUiThread(() -> {
+                            clickedButton.setEnabled(true);
+                        });
+                    });
+
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                    displayException(ex);
+                }
+            }
+        });
+
+
         recognizeContinuousButton = findViewById(R.id.buttonRecognizeContinuous);
+
 
         // Initialize SpeechSDK and request required permissions.
         try {
@@ -167,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
         // recognize continuously
         ///////////////////////////////////////////////////
         recognizeContinuousButton.setOnClickListener(new View.OnClickListener() {
-            private static final String logTag = "reco 3";
+            private static final String logTag = "reco";
             private boolean continuousListeningStarted = false;
             private SpeechRecognizer reco = null;
             private TranslationRecognizer translatorReco = null;
@@ -181,18 +262,8 @@ public class MainActivity extends AppCompatActivity {
                 final Button clickedButton = (Button) view;
                 disableButtons();
                 if (continuousListeningStarted) {
-                    if(translatorReco != null){
-                        final Future<Void> task =  translatorReco.stopContinuousRecognitionAsync();
-                        setOnTaskCompletedListener(task, result -> {
-                            Log.i(logTag, "Continuous recognition stopped.");
-                            enableButtons();
-                            continuousListeningStarted = false;
-
-                            stopAudioStreaming();
-                        });
-                    }
                     if (reco != null) {
-                        final Future<Void> task =  reco.stopContinuousRecognitionAsync();
+                        final Future<Void> task = reco.stopContinuousRecognitionAsync();
                         setOnTaskCompletedListener(task, result -> {
                             Log.i(logTag, "Continuous recognition stopped.");
                             enableButtons();
@@ -218,67 +289,31 @@ public class MainActivity extends AppCompatActivity {
 
                     audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
 
-                    boolean isTranslator = true;
-                    if(isTranslator){
-                        SpeechTranslationConfig speechTranslationConfig = SpeechTranslationConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
-                        speechTranslationConfig.setSpeechRecognitionLanguage("en-US");
 
-                        String toLanguage = "ko";
-                        String[] toLanguages = { toLanguage };
-                        for (String language : toLanguages) {
-                            speechTranslationConfig.addTargetLanguage(language);
-                        }
-                        translatorReco = new TranslationRecognizer(speechTranslationConfig, audioInput);;
-                        translatorReco.recognizing.addEventListener((o, speechTranslationResultEventArgs) -> {
-                            final String s = speechTranslationResultEventArgs.getResult().getTranslations().get(toLanguage);
-                            content.add(s);
-                            setRecognizedText(TextUtils.join(" ", content));
-                            content.remove(content.size() - 1);
+                    reco = new SpeechRecognizer(speechConfig, audioInput);
+                    reco.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
+                        final String s = speechRecognitionResultEventArgs.getResult().getText();
+                        Log.i(logTag, "Intermediate result received: " + s);
+                        content.add(s);
+                        setRecognizedText(TextUtils.join(" ", content));
+                        content.remove(content.size() - 1);
+                    });
+
+                    reco.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
+                        final String s = speechRecognitionResultEventArgs.getResult().getText();
+                        Log.i(logTag, "Final result received: " + s);
+                        content.add(s);
+                        setRecognizedText(TextUtils.join(" ", content));
+                    });
+
+                    final Future<Void> task = reco.startContinuousRecognitionAsync();
+                    setOnTaskCompletedListener(task, result -> {
+                        continuousListeningStarted = true;
+                        MainActivity.this.runOnUiThread(() -> {
+                            clickedButton.setEnabled(true);
                         });
+                    });
 
-                        translatorReco.recognized.addEventListener((o, speechTranslationResultEventArgs) -> {
-                            final String s = speechTranslationResultEventArgs.getResult().getTranslations().get(toLanguage);
-                            Log.d("MainActivity-recognized", s);
-                            content.add(s);
-                            setRecognizedText(TextUtils.join(" ", content));
-                        });
-
-                        final Future<Void> task = translatorReco.startContinuousRecognitionAsync();
-
-                        setOnTaskCompletedListener(task, result -> {
-                            continuousListeningStarted = true;
-                            MainActivity.this.runOnUiThread(() -> {
-                                clickedButton.setEnabled(true);
-                            });
-                        });
-
-                    } else
-                    {
-
-                        reco = new SpeechRecognizer(speechConfig, audioInput);
-                        reco.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
-                            final String s = speechRecognitionResultEventArgs.getResult().getText();
-                            Log.i(logTag, "Intermediate result received: " + s);
-                            content.add(s);
-                            setRecognizedText(TextUtils.join(" ", content));
-                            content.remove(content.size() - 1);
-                        });
-
-                        reco.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
-                            final String s = speechRecognitionResultEventArgs.getResult().getText();
-                            Log.i(logTag, "Final result received: " + s);
-                            content.add(s);
-                            setRecognizedText(TextUtils.join(" ", content));
-                        });
-
-                        final Future<Void> task = reco.startContinuousRecognitionAsync();
-                        setOnTaskCompletedListener(task, result -> {
-                            continuousListeningStarted = true;
-                            MainActivity.this.runOnUiThread(() -> {
-                                clickedButton.setEnabled(true);
-                            });
-                        });
-                    }
 
                 } catch (Exception ex) {
                     System.out.println(ex.getMessage());
@@ -320,12 +355,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void disableButtons() {
         MainActivity.this.runOnUiThread(() -> {
+            translateContinuousButton.setEnabled(false);
             recognizeContinuousButton.setEnabled(false);
         });
     }
 
     private void enableButtons() {
         MainActivity.this.runOnUiThread(() -> {
+            translateContinuousButton.setEnabled(true);
             recognizeContinuousButton.setEnabled(true);
         });
     }
