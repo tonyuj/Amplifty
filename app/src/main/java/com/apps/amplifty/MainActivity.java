@@ -24,7 +24,10 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.translation.TranslationSpec;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,6 +50,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -63,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     // Replace below with your own service region (e.g., "westus").
     private static final String SpeechRegion = "eastus";
     private static final String KwsModelFile = "kws.table";
+
+    private String selectedLanguage = "Spanish";
 
     private TextView recognizedTextView;
     private Button translateContinuousButton;
@@ -111,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        Log.i("MainActivity", String.valueOf(R.id.nav_btn_home));
         binding.navView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -131,8 +137,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // language selection
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.languages_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
+                selectedLanguage = adapterView.getItemAtPosition(pos).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                selectedLanguage = "Spanish";
+            }
+        });
+
         recognizedTextView = findViewById(R.id.recognizedText);
         recognizedTextView.setMovementMethod(new ScrollingMovementMethod());
+
         translateContinuousButton = findViewById(R.id.buttonRecognizeContinuous2);
         translateContinuousButton.setOnClickListener(new View.OnClickListener() {
             private static final String logTag = "reco";
@@ -178,11 +207,25 @@ public class MainActivity extends AppCompatActivity {
                     SpeechTranslationConfig speechTranslationConfig = SpeechTranslationConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
                     speechTranslationConfig.setSpeechRecognitionLanguage("en-US");
 
-                    String toLanguage = "ko";
-                    String[] toLanguages = {toLanguage};
-                    for (String language : toLanguages) {
-                        speechTranslationConfig.addTargetLanguage(language);
+                    Map<String, String> languageCodeMap = new HashMap<String, String>() {{
+                        put("Spanish", "es");
+                        put("Italian", "it");
+                        put("French", "fr");
+                        put("Indian", "in");
+                        put("Korean", "ko");
+                        put("Japanese", "ja");
+                        put("Chinese", "zh");
+                        put("Russian", "ru");
+                    }};
+
+                    String toLanguage = languageCodeMap.get(selectedLanguage);
+
+                    if(toLanguage == null){
+                        return;
                     }
+
+                    speechTranslationConfig.addTargetLanguage(toLanguage);
+
                     translatorReco = new TranslationRecognizer(speechTranslationConfig, audioInput);
                     ;
                     translatorReco.recognizing.addEventListener((o, speechTranslationResultEventArgs) -> {
@@ -217,8 +260,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         recognizeContinuousButton = findViewById(R.id.buttonRecognizeContinuous);
-
-
         // Initialize SpeechSDK and request required permissions.
         try {
             // a unique number within the application to allow
@@ -245,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         ///////////////////////////////////////////////////
-        // recognize continuously
+        // speech recognize continuously
         ///////////////////////////////////////////////////
         recognizeContinuousButton.setOnClickListener(new View.OnClickListener() {
             private static final String logTag = "reco";
